@@ -1,0 +1,16 @@
+.next
+/node_modules
+.env
+.env.example
+.DS_Store
+*.log
+*.tsbuildinfo
+dist
+coverage
+.idea
+.vscode
+*.swp
+*.swo
+*.bak
+*.tmp
+*.cache 

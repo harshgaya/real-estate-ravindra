@@ -1,0 +1,669 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  designation   String?
+  photo         String?
+  role          String    @default("agent")
+  team          String?
+  managerId     String?
+  manager       User?     @relation("UserManager", fields: [managerId], references: [id], onDelete: SetNull)
+  reports       User[]    @relation("UserManager")
+  isActive      Boolean   @default(true)
+  joiningDate   DateTime?
+  lastLoginAt   DateTime?
+  forcePasswordChange Boolean @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  assignedLeads     Lead[]          @relation("LeadAssignee")
+  createdLeads      Lead[]          @relation("LeadCreator")
+  activities        LeadActivity[]
+  siteVisits        SiteVisit[]
+  tasks             Task[]
+  bookings          Booking[]
+  notifications     Notification[]
+  pushSubs          PushSubscription[]
+  loginHistory      LoginHistory[]
+  auditLogs         AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([team])
+  @@map("users")
+}
+
+model LoginHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress String?
+  userAgent String?
+  device    String?
+  loggedInAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("login_history")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  authKey   String
+  device    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+model Property {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  name            String
+  tagline         String?
+  description     String?
+
+  type            String   @default("apartment")
+  intent          String   @default("buy")
+  config          String?
+  status          String   @default("Now Selling")
+
+  bedrooms        Int      @default(0)
+  bathrooms       Int      @default(0)
+  parking         Int      @default(0)
+  floors          Int      @default(0)
+  totalUnits      Int      @default(0)
+
+  carpetArea      String?
+  builtUpArea     String?
+  superBuiltUpArea String?
+  area            String?
+  facing          String?
+  view            String?
+  furnishing      String?
+  ageOfProperty   String?
+
+  priceMin        BigInt   @default(0)
+  priceMax        BigInt   @default(0)
+  priceLabel      String?
+  pricePerSqft    Int      @default(0)
+  negotiable      Boolean  @default(false)
+  maintenance     Int      @default(0)
+  stampDuty       Int      @default(0)
+  registrationCost Int     @default(0)
+  allInclusivePrice BigInt @default(0)
+
+  loanBanksJson   String   @default("[]")
+
+  totalInventory  Int      @default(0)
+  soldUnits       Int      @default(0)
+  blockedUnits    Int      @default(0)
+  availableUnits  Int      @default(0)
+
+  city            String
+  locality        String?
+  address         String?
+  pincode         String?
+  latitude        Float?
+  longitude       Float?
+  location        String
+
+  builderName     String?
+  builderEstd     String?
+  rera            String?
+  approvalsJson   String   @default("[]")
+
+  coverImage      String
+  galleryJson     String   @default("[]")
+  videosJson      String   @default("[]")
+  pdfsJson        String   @default("[]")
+  floorPlanImage  String?
+  masterPlanImage String?
+  virtualTourUrl  String?
+  videoTourUrl    String?
+
+  amenitiesJson   String   @default("[]")
+  configurationsJson String @default("[]")
+  specificationsJson String @default("[]")
+  nearbyJson      String   @default("[]")
+  tagsJson        String   @default("[]")
+
+  possessionDate  String?
+  launchDate      String?
+
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+
+  isFeatured      Boolean  @default(false)
+  isHotDeal       Boolean  @default(false)
+  discountText    String?
+  isActive        Boolean  @default(true)
+
+  projectId       String?
+  project         Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdById     String?
+  updatedById     String?
+
+  leads           Lead[]
+  siteVisits      SiteVisit[]
+  bookings        Booking[]
+
+  @@index([city])
+  @@index([type])
+  @@index([intent])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([slug])
+  @@map("properties")
+}
+
+model Project {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  name            String
+  tagline         String?
+  description     String?
+
+  type            String   @default("Residential")
+  status          String   @default("Now Selling")
+
+  city            String
+  locality        String?
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  location        String
+
+  priceMin        BigInt   @default(0)
+  priceMax        BigInt   @default(0)
+  priceLabel      String?
+
+  totalUnits      Int      @default(0)
+  totalTowers     Int      @default(0)
+  landArea        String?
+  floors          String?
+  possessionDate  String?
+  launchDate      String?
+
+  rera            String?
+  builderName     String?
+  builderEstd     String?
+  builderProjects Int      @default(0)
+  builderAwards   String?
+
+  coverImage      String
+  galleryJson     String   @default("[]")
+  videosJson      String   @default("[]")
+  pdfsJson        String   @default("[]")
+  masterPlanImage String?
+  virtualTourUrl  String?
+  videoTourUrl    String?
+
+  configurationsJson String @default("[]")
+  amenitiesJson   String   @default("[]")
+  phasesJson      String   @default("[]")
+  progressPhotosJson String @default("[]")
+  approvalsJson   String   @default("[]")
+  tagsJson        String   @default("[]")
+
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+
+  isFeatured      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdById     String?
+  updatedById     String?
+
+  properties      Property[]
+  leads           Lead[]
+
+  @@index([city])
+  @@index([status])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([slug])
+  @@map("projects")
+}
+
+model Lead {
+  id              String   @id @default(uuid())
+
+  firstName       String
+  lastName        String?
+  name            String
+
+  primaryPhone    String
+  secondaryPhone  String?
+  alternatePhone  String?
+  whatsappPhone   String?
+  primaryEmail    String
+  alternateEmail  String?
+
+  source          String
+  subSource       String?
+  campaign        String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmTerm         String?
+  utmContent      String?
+  referrerUrl     String?
+  ipAddress       String?
+  userAgent       String?
+  geoCity         String?
+  geoCountry      String?
+
+  status          String   @default("new")
+  subStatus       String?
+  temperature     String?
+  leadScore       Int      @default(0)
+
+  budgetMin       BigInt?
+  budgetMax       BigInt?
+  bhkPreference   String?
+  propertyTypePref String?
+  localityPrefJson String  @default("[]")
+  cityPref        String?
+  timeline        String?
+  purpose         String?
+  funding         String?
+  loanStatus      String?
+
+  panNumber       String?
+  dob             DateTime?
+  anniversary     DateTime?
+  occupation      String?
+  company         String?
+  designation     String?
+  incomeRange     String?
+  familySize      Int?
+  currentAddress  String?
+
+  commPreference  String?
+  bestTimeToCall  String?
+  language        String?
+
+  tagsJson        String   @default("[]")
+  customFieldsJson String  @default("{}")
+
+  message         String?
+  notes           String?
+  lostReason      String?
+  lostReasonNotes String?
+  wonReason       String?
+
+  page            String?
+  propertySlug    String?
+
+  assignedToId    String?
+  assignedTo      User?    @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  assignedById    String?
+  assignedAt      DateTime?
+
+  createdById     String?
+  createdBy       User?    @relation("LeadCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  propertyId      String?
+  property        Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  projectId       String?
+  project         Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  contactedAt     DateTime?
+  lastActivityAt  DateTime?
+  nextFollowupAt  DateTime?
+  reminder15mSent Boolean @default(false)
+reminder1hSent  Boolean @default(false)
+
+  isJunk          Boolean  @default(false)
+  isDuplicate     Boolean  @default(false)
+  duplicateOfId   String?
+
+  activities      LeadActivity[]
+  siteVisits      SiteVisit[]
+  tasks           Task[]
+  bookings        Booking[]
+  documents       Document[]
+
+  @@index([status])
+  @@index([source])
+  @@index([primaryPhone])
+  @@index([primaryEmail])
+  @@index([temperature])
+  @@index([assignedToId])
+  @@index([createdAt])
+  @@index([nextFollowupAt])
+  @@index([isJunk])
+  @@map("leads")
+}
+
+model LeadActivity {
+  id        String   @id @default(uuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  type      String
+  title     String
+  body      String?
+
+  oldValue  String?
+  newValue  String?
+
+  callDuration Int?
+  callOutcome  String?
+  emailSubject String?
+  templateId   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("lead_activities")
+}
+
+model SiteVisit {
+  id              String   @id @default(uuid())
+  leadId          String
+  lead            Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  propertyId      String?
+  property        Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  scheduledAt     DateTime
+  durationMins    Int      @default(60)
+  status          String   @default("scheduled")
+
+  meetingPoint    String?
+  meetingMapUrl   String?
+  pickupNotes     String?
+  notes           String?
+
+  outcome         String?
+  feedback        String?
+  interestLevel   Int?
+  visitPhotosJson String   @default("[]")
+  customerSignature String?
+  reportPdfUrl    String?
+
+  checkedInAt     DateTime?
+  checkInLat      Float?
+  checkInLng      Float?
+
+  reminder1DaySent  Boolean @default(false)
+  reminder1HourSent Boolean @default(false)
+  reminder10MinSent Boolean @default(false)
+
+  assignedToId    String?
+  assignedTo      User?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([scheduledAt])
+  @@index([status])
+  @@index([leadId])
+  @@index([assignedToId])
+  @@map("site_visits")
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  type        String   @default("followup")
+
+  leadId      String?
+  lead        Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  assignedToId String?
+  assignedTo   User?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  dueAt       DateTime?
+  priority    String   @default("medium")
+  status      String   @default("open")
+
+  recurringPattern String?
+  parentTaskId String?
+
+  reminderSent Boolean @default(false)
+  reminderOverdueSent Boolean @default(false)
+
+  completedAt DateTime?
+  completionNotes String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([dueAt])
+  @@index([assignedToId])
+  @@index([leadId])
+  @@map("tasks")
+}
+
+model Booking {
+  id              String   @id @default(uuid())
+  bookingNumber   String   @unique
+
+  leadId          String
+  lead            Lead     @relation(fields: [leadId], references: [id])
+  propertyId      String?
+  property        Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  unitNumber      String?
+  configuration   String?
+  totalValue      BigInt   @default(0)
+  agreementValue  BigInt   @default(0)
+  registrationValue BigInt @default(0)
+  bookingAmount   BigInt   @default(0)
+  amountReceived  BigInt   @default(0)
+
+  paymentPlan     String?
+  paymentMilestonesJson String @default("[]")
+
+  stampDuty       BigInt   @default(0)
+  registration    BigInt   @default(0)
+  gst             BigInt   @default(0)
+
+  loanBank        String?
+  loanAmount      BigInt   @default(0)
+  loanStatus      String?
+
+  kycAadhaar      Boolean  @default(false)
+  kycPan          Boolean  @default(false)
+  kycAddress      Boolean  @default(false)
+  kycIncome       Boolean  @default(false)
+  kycPhoto        Boolean  @default(false)
+  kycComplete     Boolean  @default(false)
+
+  agreementSigned Boolean  @default(false)
+  agreementDate   DateTime?
+  allotmentIssued Boolean  @default(false)
+  allotmentDate   DateTime?
+  possessionGiven Boolean  @default(false)
+  possessionDate  DateTime?
+
+  cancellationReason String?
+  refundAmount    BigInt   @default(0)
+  refundStatus    String?
+
+  status          String   @default("pending")
+
+  paymentMode     String?
+  paymentRef      String?
+  paidAt          DateTime?
+
+  internalNotes   String?
+  customerNotes   String?
+
+  createdById     String
+  createdBy       User     @relation(fields: [createdById], references: [id])
+
+  documents       Document[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([leadId])
+  @@map("bookings")
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  filename    String
+  fileUrl     String
+  fileSize    Int      @default(0)
+  mimeType    String?
+  type        String   @default("other")
+  label       String?
+
+  leadId      String?
+  lead        Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  bookingId   String?
+  booking     Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  uploadedById String?
+  createdAt   DateTime @default(now())
+
+  @@index([leadId])
+  @@index([bookingId])
+  @@index([type])
+  @@map("documents")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String?
+  link      String?
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  refType   String?
+  refId     String?
+  priority  String   @default("normal")
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model Template {
+  id          String   @id @default(uuid())
+  name        String
+  channel     String
+  category    String   @default("other")
+  subject     String?
+  body        String
+  isActive    Boolean  @default(true)
+  displayOrder Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([channel])
+  @@index([category])
+  @@map("templates")
+}
+
+model Testimonial {
+  id              String   @id @default(uuid())
+  customerName    String
+  customerPhoto   String?
+  customerTitle   String?
+  rating          Int      @default(5)
+  type            String   @default("text")
+  text            String?
+  videoUrl        String?
+  videoThumbnail  String?
+  propertyId      String?
+  testimonialDate DateTime?
+  displayOrder    Int      @default(0)
+  isFeatured      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([isFeatured])
+  @@map("testimonials")
+}
+
+model AutoAssignRule {
+  id              String   @id @default(uuid())
+  isActive        Boolean  @default(false)
+  rotationAgentsJson String @default("[]")
+  lastAssignedIndex Int    @default(-1)
+  updatedAt       DateTime @updatedAt
+
+  @@map("auto_assign_rules")
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  category  String   @default("general")
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entityType String
+  entityId  String?
+  changes   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model LeadImport {
+  id            String   @id @default(uuid())
+  filename      String
+  totalRows     Int      @default(0)
+  successCount  Int      @default(0)
+  failedCount   Int      @default(0)
+  skippedCount  Int      @default(0)
+  errorsJson    String   @default("[]")
+  importedById  String?
+  createdAt     DateTime @default(now())
+
+  @@map("lead_imports")
+}
